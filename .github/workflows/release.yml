@@ -84,6 +84,15 @@ jobs:
             cp ./app/strings_other.xml.example ./app/src/main/res/values/strings_other.xml
           fi
 
+      - name: Verify signing secret
+        env:
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::RELEASE_KEYSTORE_BASE64 is not set. Releases must be signed with the fork's fixed key, otherwise they cannot update an installed app. See keystore/keystore.properties / the README section 'In-app updates'."
+            exit 1
+          fi
+
       - name: Decode Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
