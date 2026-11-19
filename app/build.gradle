@@ -22,12 +22,28 @@ android {
         testOptions.unitTests.includeAndroidResources = true
     }
 
+    // Fixed release signing key of this fork: a stable signature is what makes in-app updates
+    // (see AppUpdater) installable over the previous build.
+    // Values come from the environment (CI / GitHub secrets) or from keystore/keystore.properties
+    // (local builds). Both are git-ignored; without them a release build stays unsigned.
+    def keystoreProperties = new Properties()
+    def keystorePropertiesFile = rootProject.file("keystore/keystore.properties")
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+    }
+    def signingValue = { String envName, String propertyName, String fallback ->
+        System.getenv(envName) ?: keystoreProperties.getProperty(propertyName) ?: fallback
+    }
+    def keystorePath = System.getenv("RELEASE_KEYSTORE_PATH") ?: keystoreProperties.getProperty("storeFile")
+
     signingConfigs {
         release {
-            storeFile file(System.getenv("RELEASE_KEYSTORE_PATH") ?: "keystore")
-            storePassword System.getenv("RELEASE_KEYSTORE_PASSWORD") ?: "dummy"
-            keyAlias System.getenv("RELEASE_KEY_ALIAS") ?: "immich"
-            keyPassword System.getenv("RELEASE_KEY_PASSWORD") ?: "dummy"
+            if (keystorePath != null) {
+                storeFile rootProject.file(keystorePath)
+            }
+            storePassword signingValue("RELEASE_KEYSTORE_PASSWORD", "storePassword", "dummy")
+            keyAlias signingValue("RELEASE_KEY_ALIAS", "keyAlias", "immich")
+            keyPassword signingValue("RELEASE_KEY_PASSWORD", "keyPassword", "dummy")
         }
     }
 

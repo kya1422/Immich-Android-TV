@@ -16,10 +16,10 @@ on:
         type: boolean
         default: true
       publishPlayStore:
-        description: 'Publish to Google Play Store'
+        description: 'Publish to Google Play Store (needs the PLAY_STORE_SERVICE_ACCOUNT_JSON secret)'
         required: false
         type: boolean
-        default: true
+        default: false
       publishGitHub:
         description: 'Publish to GitHub Release'
         required: false
@@ -73,8 +73,16 @@ jobs:
           GOOGLE_SERVICES_BASE64: ${{secrets.GOOGLE_SERVICES_BASE64}}
           STRINGS_OTHER_BASE64: ${{secrets.STRINGS_OTHER}}
         run: |
-          echo $GOOGLE_SERVICES_BASE64 | base64 --decode > ./app/google-services.json
-          echo $STRINGS_OTHER_BASE64 | base64 --decode > ./app/src/main/res/values/strings_other.xml
+          if [ -n "$GOOGLE_SERVICES_BASE64" ]; then
+            echo "$GOOGLE_SERVICES_BASE64" | base64 --decode > ./app/google-services.json
+          else
+            cp ./app/google-services.example ./app/google-services.json
+          fi
+          if [ -n "$STRINGS_OTHER_BASE64" ]; then
+            echo "$STRINGS_OTHER_BASE64" | base64 --decode > ./app/src/main/res/values/strings_other.xml
+          else
+            cp ./app/strings_other.xml.example ./app/src/main/res/values/strings_other.xml
+          fi
 
       - name: Decode Keystore
         env:
@@ -117,7 +125,7 @@ jobs:
           cat commits.txt
 
       - name: Prepare Play Store release notes
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publishPlayStore }}
+        if: ${{ (github.event_name != 'workflow_dispatch' || inputs.publishPlayStore) && secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON != '' }}
         run: |
           mkdir -p play-whatsnew
           python3 - <<'PY'
@@ -154,9 +162,13 @@ jobs:
             SIGNING_NOTE="⚠️ APKs are **unsigned** (the \`RELEASE_KEYSTORE_BASE64\` secret is not configured). They must be signed before they can be installed."
           fi
 
+          NOTES_FILE="commits.txt"
+          if [ ! -s "$NOTES_FILE" ]; then
+            echo "Release $VERSION_NAME" > "$NOTES_FILE"
+          fi
+
           gh release create "$TAG_NAME" \
             --title "Immich TV $VERSION_NAME" \
-            --notes "$NOTES" \
+            --notes-file "$NOTES_FILE" \
             --target "$GITHUB_SHA" \
-            --generate-notes \
             app/build/outputs/apk/release/*.apk

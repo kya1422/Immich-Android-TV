@@ -92,6 +92,25 @@ With Cloudflare Access enabled those two features need a bypass, otherwise they 
 phone" talks to a separate authentication service, which needs its own exemption if it is behind
 Access too.
 
+## In-app updates
+
+The app can update itself from the [GitHub releases](https://github.com/kya1422/Immich-Android-TV/releases)
+of this fork:
+
+- It checks at most once a day on start (can be turned off in Settings → Updates) and whenever
+  "Check for updates now" is pressed.
+- If the release version is newer than the installed one, it offers to download the APK and hands it
+  to the system package installer.
+
+Requirements and caveats:
+
+- The installed APK and the release APK must be signed with the **same key** - that is why the release
+  key lives in `keystore/` and is configured as GitHub secrets. Switching keys (or installing the
+  upstream APK built with giejay's key) requires one manual uninstall.
+- Installations from an APK need "install unknown apps" permission for Immich TV; the app asks for it.
+- Releases must have a version in the tag (`v7.1.0`) and an `.apk` asset, both of which
+  `.github/workflows/release.yml` produces.
+
 ## Screenshots
 
 |                                                                                    |                                                                      |                                                                                    |
@@ -108,6 +127,12 @@ Access too.
 3. copy app/strings_other.xml.example to app/src/main/res/values/strings_other.xml and modify
    the address and API keys for your demo server.
 4. Build apk with `./gradlew assembleRelease`
+
+Release builds are signed with a fixed release key so that in-app updates can be installed over an
+existing installation. The key is never committed: put `storeFile`, `storePassword`, `keyAlias` and
+`keyPassword` into `keystore/keystore.properties` (git-ignored) or provide the same values as the
+`RELEASE_KEYSTORE_PATH` / `RELEASE_KEYSTORE_PASSWORD` / `RELEASE_KEY_ALIAS` / `RELEASE_KEY_PASSWORD`
+environment variables (that is what CI does). Without them the release APK stays unsigned.
 
 ## Support the project
 

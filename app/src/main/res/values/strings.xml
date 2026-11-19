@@ -258,6 +258,28 @@
     <string name="cf_access_client_secret_not_set">No client secret configured</string>
     <string name="cloudflare_access_blocked">Cloudflare Access blocked this request. Check the Cloudflare Access Client ID and Client Secret (they are optional and can be set in the Network settings), or exempt this host from Access.</string>
 
+    <!-- Self-update (GitHub releases of this fork) -->
+    <string name="update_settings">Updates</string>
+    <string name="installed_version">Installed version</string>
+    <string name="auto_update_check">Check for updates automatically</string>
+    <string name="auto_update_check_desc">Checks GitHub once a day for a new release of this fork and offers to install it.</string>
+    <string name="check_for_updates">Check for updates now</string>
+    <string name="check_for_updates_desc">Downloads the latest release from GitHub and installs it over the current app.</string>
+    <string name="update_available_title">Update available: %1$s (installed: %2$s)</string>
+    <string name="update_install_now">Install update</string>
+    <string name="update_later">Later</string>
+    <string name="update_no_notes">No release notes.</string>
+    <string name="update_downloading_title">Downloading update</string>
+    <string name="update_downloading_message">Downloaded %1$d%%</string>
+    <string name="update_download_failed_title">Update failed</string>
+    <string name="update_download_failed_message">The update could not be downloaded or is not a valid APK. You can install it manually from the release page.</string>
+    <string name="update_open_release_page">Open release page</string>
+    <string name="update_check_failed">Update check failed: %1$s</string>
+    <string name="update_none_available">You already have the latest version (%1$s).</string>
+    <string name="update_install_permission_title">Allow app installs</string>
+    <string name="update_install_permission_message">Android needs your permission to install the update. Allow \"install unknown apps\" for Immich TV, then press \"Install update\" again.</string>
+    <string name="update_open_settings">Open settings</string>
+
     <!-- Auth by phone -->
     <string name="or_enter_code_on_auth_url">Or enter the code %1$s on %2$s</string>
     <string name="auth_timeout_recreating_qr">Did not authenticate within the timeout, recreating QR code.</string>

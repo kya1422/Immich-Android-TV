@@ -37,6 +37,7 @@ import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ZOOM_EFFECT
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ZOOM_SCROLL_PANORAMAS
 import nl.giejay.android.tv.immich.shared.util.toSliderItem
 import nl.giejay.android.tv.immich.shared.viewmodel.KeyEventsViewModel
+import nl.giejay.android.tv.immich.update.AppUpdater
 import nl.giejay.android.tv.immich.slider.ImmichMediaSliderArgs
 import nl.giejay.mediaslider.adapter.AlignOption
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
@@ -80,6 +81,9 @@ class MainActivity : FragmentActivity() {
         if (savedInstanceState == null) {
             loadDeepLinkOrStartingPage(intent.data)
         }
+
+        // throttled to once a day and silent unless there is something to install
+        AppUpdater.checkSilently(this)
     }
 
     /**

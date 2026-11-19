@@ -16,6 +16,7 @@ import nl.giejay.android.tv.immich.shared.prefs.DebugPrefScreen
 import nl.giejay.android.tv.immich.shared.prefs.HomeScreenChannelsPrefScreen
 import nl.giejay.android.tv.immich.shared.prefs.NetworkPrefScreen
 import nl.giejay.android.tv.immich.shared.prefs.ScreensaverPrefScreen
+import nl.giejay.android.tv.immich.shared.prefs.UpdatePrefScreen
 import nl.giejay.android.tv.immich.shared.prefs.ViewPrefScreen
 
 
@@ -98,6 +99,17 @@ class SettingsFragment : RowsSupportFragment() {
                         ) {
                             findNavController().navigate(
                                 HomeFragmentDirections.actionGlobalToSettingsDialog(HomeScreenChannelsPrefScreen.key)
+                            )
+                        },
+                        SettingsCard(
+                            ImmichApplication.appContext!!.getString(R.string.update_settings),
+                            null,
+                            "update_settings",
+                            "ic_settings_settings",
+                            "ic_settings_settings"
+                        ) {
+                            findNavController().navigate(
+                                HomeFragmentDirections.actionGlobalToSettingsDialog(UpdatePrefScreen.key)
                             )
                         },
                         SettingsCard(

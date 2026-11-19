@@ -23,6 +23,9 @@
 # constructors must survive R8 or (de)serialization silently breaks at runtime.
 -keep class nl.giejay.android.tv.immich.api.model.** { *; }
 -keep class nl.giejay.android.tv.immich.api.service.** { *; }
+# ...including the GitHub release response of the in-app updater (see UpdateChecker).
+-keep class nl.giejay.android.tv.immich.update.GitHubRelease { *; }
+-keep class nl.giejay.android.tv.immich.update.GitHubAsset { *; }
 
 # MetaDataSerializer (mediaslider module) delegates to Gson's default reflective adapter
 # for these classes and stores/reads the result as JSON in SharedPreferences, so their

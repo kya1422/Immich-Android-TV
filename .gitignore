@@ -19,3 +19,6 @@ mediasliderold
 mediaslider2
 commits.txt
 service-account-key.json
+# release signing key of this fork - never commit
+keystore/
+keystore.properties

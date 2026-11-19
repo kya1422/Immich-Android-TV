@@ -1,5 +1,6 @@
 package nl.giejay.android.tv.immich.shared.prefs;
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -17,6 +18,7 @@ import androidx.preference.Preference
 import androidx.preference.Preference.SummaryProvider
 import com.github.alexzhirkevich.customqrgenerator.QrData
 import com.github.alexzhirkevich.customqrgenerator.vector.QrCodeDrawable
+import nl.giejay.android.tv.immich.BuildConfig
 import nl.giejay.android.tv.immich.ImmichApplication
 import nl.giejay.android.tv.immich.R
 import nl.giejay.android.tv.immich.album.AlbumFragmentDirections
@@ -25,6 +27,7 @@ import nl.giejay.android.tv.immich.homescreenchannels.HomeScreenChannelManager
 import nl.giejay.android.tv.immich.people.PeopleFragmentDirections
 import nl.giejay.android.tv.immich.screensaver.ScreenSaverType
 import nl.giejay.android.tv.immich.security.ApiKeyCipher
+import nl.giejay.android.tv.immich.update.AppUpdater
 import nl.giejay.mediaslider.transformations.GlideTransformations
 import java.util.Collections.emptySet
 
@@ -503,6 +506,26 @@ data object ALL_ASSETS_SORTING : EnumByTitlePref<PhotosOrder>(PhotosOrder.NEWEST
     }
 }
 
+// updates
+data object AUTO_UPDATE_CHECK : BooleanPref(true,
+    ImmichApplication.appContext!!.getString(R.string.auto_update_check),
+    ImmichApplication.appContext!!.getString(R.string.auto_update_check_desc))
+
+data object INSTALLED_VERSION : NotUserEditableStringPref(
+    ImmichApplication.appContext!!.getString(R.string.installed_version),
+    BuildConfig.VERSION_NAME
+) {
+    override fun key() = "installedVersion"
+}
+
+data object CHECK_FOR_UPDATES : ActionPref(null,
+    ImmichApplication.appContext!!.getString(R.string.check_for_updates),
+    ImmichApplication.appContext!!.getString(R.string.check_for_updates_desc),
+    { context, _ ->
+        (context as? Activity)?.let { AppUpdater.checkNow(it) }
+        true
+    })
+
 // other
 data object DEBUG_MODE : BooleanPref(false,
     ImmichApplication.appContext!!.getString(R.string.enable_debug_mode),
@@ -716,6 +739,15 @@ data object NetworkPrefScreen : PrefScreen(ImmichApplication.appContext!!.getStr
         PrefCategory(
             ImmichApplication.appContext!!.getString(R.string.cf_access_token_category),
             listOf(CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET)
+        )
+    )
+)
+
+data object UpdatePrefScreen : PrefScreen(ImmichApplication.appContext!!.getString(R.string.update_settings), "update",
+    listOf(
+        PrefCategory(
+            "",
+            listOf(INSTALLED_VERSION, AUTO_UPDATE_CHECK, CHECK_FOR_UPDATES)
         )
     )
 )
