@@ -133,8 +133,21 @@ jobs:
           echo "Release Notes:"
           cat commits.txt
 
+      # `secrets` cannot be used in an `if` expression, so expose it as a step output first.
+      - name: Check Play Store credentials
+        id: playstore
+        env:
+          PLAY_STORE_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$PLAY_STORE_JSON" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "PLAY_STORE_SERVICE_ACCOUNT_JSON is not set - skipping the Play Store steps."
+          fi
+
       - name: Prepare Play Store release notes
-        if: ${{ (github.event_name != 'workflow_dispatch' || inputs.publishPlayStore) && secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON != '' }}
+        if: ${{ (github.event_name != 'workflow_dispatch' || inputs.publishPlayStore) && steps.playstore.outputs.enabled == 'true' }}
         run: |
           mkdir -p play-whatsnew
           python3 - <<'PY'
@@ -148,7 +161,7 @@ jobs:
 
       - name: Upload AAB to Google Play
         uses: r0adkll/upload-google-play@v1.1.5
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publishPlayStore }}
+        if: ${{ (github.event_name != 'workflow_dispatch' || inputs.publishPlayStore) && steps.playstore.outputs.enabled == 'true' }}
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
           packageName: nl.giejay.android.tv.immich
