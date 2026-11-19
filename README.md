@@ -68,6 +68,30 @@ When setting up your API key in Immich, make sure to grant the following permiss
 - `tag.read` - Read tag information
 - `timeline.read` - Read timeline data
 
+## Cloudflare Access (service token)
+
+If your Immich server is only reachable through [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/),
+the app can authenticate with an Access **service token**:
+
+1. In the Cloudflare Zero Trust dashboard, create a service token (Access → Service Auth) and copy its
+   Client ID and Client Secret.
+2. Add the token to the Access application policy of your Immich host (policy action `Service Auth`).
+3. Enter Client ID and Secret in the app - on the sign-in screen, or later via Settings → Network.
+
+Both fields are optional and only sent when both are filled (as `CF-Access-Client-Id` and
+`CF-Access-Client-Secret`). They are added to every request to the Immich server: the API, thumbnails
+and images (Glide) and video playback (ExoPlayer). The secret is encrypted at rest with the same
+Android Keystore mechanism as the API key.
+
+Limitations, because such URLs are fetched outside of the app's HTTP client (no headers possible):
+
+- opening a video in an external player (`?apiKey=` query parameter instead of a header)
+- home screen channel poster art, fetched by the launcher process
+
+With Cloudflare Access enabled those two features need a bypass, otherwise they fail. "Sign in by
+phone" talks to a separate authentication service, which needs its own exemption if it is behind
+Access too.
+
 ## Screenshots
 
 |                                                                                    |                                                                      |                                                                                    |

@@ -2,6 +2,9 @@ package nl.giejay.android.tv.immich.api.util
 
 import arrow.core.Either
 import com.google.gson.Gson
+import nl.giejay.android.tv.immich.ImmichApplication
+import nl.giejay.android.tv.immich.R
+import nl.giejay.android.tv.immich.api.CloudflareAccessBlockedException
 import nl.giejay.android.tv.immich.api.model.ImmichErrorResponse
 import nl.giejay.android.tv.immich.api.model.toDisplayMessage
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
@@ -79,6 +82,9 @@ object ApiUtil {
                     }
                 }
             }
+        } catch (e: CloudflareAccessBlockedException) {
+            Timber.e(e, "Cloudflare Access blocked the request")
+            return Either.Left(cloudflareAccessBlockedMessage())
         } catch (e: HttpException) {
             Timber.e(e, "Could not fetch items due to http error")
             return Either.Left("Could not fetch data from API, status: ${e.code()}")
@@ -97,6 +103,10 @@ object ApiUtil {
             null
         }
     }
+
+    private fun cloudflareAccessBlockedMessage(): String =
+        ImmichApplication.appContext?.getString(R.string.cloudflare_access_blocked)
+            ?: "Cloudflare Access blocked this request. Check the Cloudflare Access service token."
 
     private fun logCorrelationId(res: Response<*>) {
         val correlationId = res.headers()["X-Correlation-ID"]

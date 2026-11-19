@@ -19,8 +19,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerView
 import nl.giejay.android.tv.immich.R
+import nl.giejay.android.tv.immich.api.util.ApiHeaders
 import nl.giejay.android.tv.immich.api.util.ApiUtil
-import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_FORCE_ORIGINAL_VIDEO
 import timber.log.Timber
@@ -51,7 +51,7 @@ class TimelineFocusVideoPreview(context: Context) {
 
     private val dataSourceFactory: DefaultHttpDataSource.Factory by lazy {
         DefaultHttpDataSource.Factory()
-            .setDefaultRequestProperties(mapOf("x-api-key" to PreferenceManager.get(API_KEY)))
+            .setDefaultRequestProperties(ApiHeaders.fromPrefs())
     }
 
     private val countdownTicker = object : Runnable {

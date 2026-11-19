@@ -11,7 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import nl.giejay.android.tv.immich.R
 import nl.giejay.android.tv.immich.api.ApiClient
-import nl.giejay.android.tv.immich.shared.prefs.API_KEY
+import nl.giejay.android.tv.immich.api.util.ApiHeaders
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
 import nl.giejay.mediaslider.util.MediaSliderListener
@@ -31,11 +31,10 @@ class ScreenSaverService : DreamService(), MediaSliderListener, ScreenSaverAsset
             finish()
             return
         }
-        val apiKey = PreferenceManager.get(API_KEY)
         mediaSliderView = MediaSliderView(this)
         mediaSliderView!!.setDefaultExoFactory(
             DefaultHttpDataSource.Factory()
-                .setDefaultRequestProperties(mapOf("x-api-key" to apiKey))
+                .setDefaultRequestProperties(ApiHeaders.fromPrefs())
         )
         setContentView(mediaSliderView)
         isInteractive = true

@@ -19,8 +19,11 @@ import nl.giejay.android.tv.immich.api.model.TimeBucketSummary
 import nl.giejay.android.tv.immich.api.model.TimelineAsset
 import nl.giejay.android.tv.immich.api.model.toTimelineAssets
 import nl.giejay.android.tv.immich.api.service.ApiService
+import nl.giejay.android.tv.immich.api.util.ApiHeaders
 import nl.giejay.android.tv.immich.api.util.ApiUtil.executeAPICall
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
+import nl.giejay.android.tv.immich.shared.prefs.CF_ACCESS_CLIENT_ID
+import nl.giejay.android.tv.immich.shared.prefs.CF_ACCESS_CLIENT_SECRET
 import nl.giejay.android.tv.immich.shared.prefs.ContentType
 import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
 import nl.giejay.android.tv.immich.shared.prefs.DISABLE_SSL_VERIFICATION
@@ -31,6 +34,7 @@ import nl.giejay.android.tv.immich.shared.prefs.SHOW_PARTNER_PHOTOS_IN_TIMELINE
 import nl.giejay.android.tv.immich.shared.prefs.SIMILAR_ASSETS_PERIOD_DAYS
 import nl.giejay.android.tv.immich.shared.prefs.SIMILAR_ASSETS_YEARS_BACK
 import nl.giejay.android.tv.immich.shared.util.Utils.pmap
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.LocalDate
@@ -44,14 +48,32 @@ data class ApiClientConfig(
     val hostName: String,
     val apiKey: String,
     val disableSslVerification: Boolean,
-    val debugMode: Boolean
+    val debugMode: Boolean,
+    // part of the config (and therefore of its equality) so a changed Cloudflare Access token
+    // rebuilds the cached ApiClient instead of reusing the client with the old headers
+    val cfAccessClientId: String = "",
+    val cfAccessClientSecret: String = ""
 ) {
+    /** Immich API key, sent with every request. */
+    val headers: Map<String, String>
+        get() = ApiHeaders.apiKey(apiKey)
+
+    /** Cloudflare Access service token, only sent to [host]. */
+    val serviceTokenHeaders: Map<String, String>
+        get() = ApiHeaders.serviceToken(cfAccessClientId, cfAccessClientSecret)
+
+    /** Host of [hostName] without scheme/port, used to scope the service token headers. */
+    val host: String?
+        get() = hostName.toHttpUrlOrNull()?.host
+
     companion object {
         fun fromPrefs(): ApiClientConfig = ApiClientConfig(
             PreferenceManager.hostName,
             PreferenceManager.get(API_KEY),
             PreferenceManager.get(DISABLE_SSL_VERIFICATION),
-            PreferenceManager.get(DEBUG_MODE)
+            PreferenceManager.get(DEBUG_MODE),
+            PreferenceManager.get(CF_ACCESS_CLIENT_ID),
+            PreferenceManager.get(CF_ACCESS_CLIENT_SECRET)
         )
     }
 }
@@ -120,7 +142,15 @@ class ApiClient(private val config: ApiClientConfig) {
     }
 
     private val retrofit = Retrofit.Builder()
-        .client(ApiClientFactory.getClient(config.disableSslVerification, config.apiKey, config.debugMode))
+        .client(
+            ApiClientFactory.getClient(
+                config.disableSslVerification,
+                config.headers,
+                config.debugMode,
+                config.serviceTokenHeaders,
+                config.host
+            )
+        )
         .addConverterFactory(GsonConverterFactory.create())
         .baseUrl("${config.hostName}/api/")
         .build()

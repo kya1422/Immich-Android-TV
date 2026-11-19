@@ -15,6 +15,8 @@ import nl.giejay.android.tv.immich.shared.guidedstep.GuidedStepUtil.addAction
 import nl.giejay.android.tv.immich.shared.guidedstep.GuidedStepUtil.addCheckedAction
 import nl.giejay.android.tv.immich.shared.guidedstep.GuidedStepUtil.addEditableAction
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
+import nl.giejay.android.tv.immich.shared.prefs.CF_ACCESS_CLIENT_ID
+import nl.giejay.android.tv.immich.shared.prefs.CF_ACCESS_CLIENT_SECRET
 import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
 import nl.giejay.android.tv.immich.shared.prefs.DISABLE_SSL_VERIFICATION
 import nl.giejay.android.tv.immich.shared.prefs.HOST_NAME
@@ -37,6 +39,8 @@ class AuthFragmentStep2 : GuidedStepSupportFragment() {
     private val ACTION_CHECK_CERTS = 2L
     private val ACTION_DEBUG_MODE = 3L
     private val ACTION_CONTINUE = 4L
+    private val ACTION_CF_CLIENT_ID = 5L
+    private val ACTION_CF_CLIENT_SECRET = 6L
 
     override fun onCreateGuidance(savedInstanceState: Bundle?): GuidanceStylist.Guidance {
         val icon: Drawable = requireContext().getDrawable(R.drawable.icon)!!
@@ -62,6 +66,21 @@ class AuthFragmentStep2 : GuidedStepSupportFragment() {
             getString(R.string.api_key_text),
             PreferenceManager.get(API_KEY),
             InputType.TYPE_CLASS_TEXT
+        )
+        // optional: only needed when the server is published through Cloudflare Access
+        addEditableAction(
+            actions,
+            ACTION_CF_CLIENT_ID,
+            getString(R.string.cf_access_client_id),
+            PreferenceManager.get(CF_ACCESS_CLIENT_ID),
+            InputType.TYPE_CLASS_TEXT
+        )
+        addEditableAction(
+            actions,
+            ACTION_CF_CLIENT_SECRET,
+            getString(R.string.cf_access_client_secret),
+            PreferenceManager.get(CF_ACCESS_CLIENT_SECRET),
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
         addCheckedAction(
             actions,
@@ -97,6 +116,8 @@ class AuthFragmentStep2 : GuidedStepSupportFragment() {
                 PreferenceManager.save(SCREENSAVER_PEOPLE, emptySet())
                 PreferenceManager.save(API_KEY, entry.apiKey)
                 PreferenceManager.save(HOST_NAME, entry.hostName)
+                PreferenceManager.save(CF_ACCESS_CLIENT_ID, getState(ACTION_CF_CLIENT_ID).trim())
+                PreferenceManager.save(CF_ACCESS_CLIENT_SECRET, getState(ACTION_CF_CLIENT_SECRET).trim())
                 PreferenceManager.save(DISABLE_SSL_VERIFICATION, findActionById(ACTION_CHECK_CERTS)?.isChecked == true)
                 PreferenceManager.save(DEBUG_MODE, findActionById(ACTION_DEBUG_MODE)?.isChecked == true)
                 val navControl = findNavController()

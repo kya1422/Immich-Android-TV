@@ -16,7 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import nl.giejay.android.tv.immich.R
 import nl.giejay.android.tv.immich.api.ApiClient
-import nl.giejay.android.tv.immich.shared.prefs.API_KEY
+import nl.giejay.android.tv.immich.api.util.ApiHeaders
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
 import nl.giejay.mediaslider.view.MediaSliderFragment
@@ -77,7 +77,7 @@ class ScreenSaverPreviewFragment : MediaSliderFragment(), ScreenSaverAssetLoader
         ioScope = CoroutineScope(Job() + Dispatchers.IO)
         sliderView?.setDefaultExoFactory(
             DefaultHttpDataSource.Factory()
-                .setDefaultRequestProperties(mapOf("x-api-key" to PreferenceManager.get(API_KEY)))
+                .setDefaultRequestProperties(ApiHeaders.fromPrefs())
         )
         ScreenSaverAssetLoader(
             ioScope,

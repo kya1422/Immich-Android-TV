@@ -9,11 +9,15 @@ import com.bumptech.glide.integration.okhttp3.OkHttpUrlLoader
 import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.module.AppGlideModule
 import nl.giejay.android.tv.immich.api.ApiClientFactory
+import nl.giejay.android.tv.immich.api.util.ApiHeaders
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
+import nl.giejay.android.tv.immich.shared.prefs.CF_ACCESS_CLIENT_ID
+import nl.giejay.android.tv.immich.shared.prefs.CF_ACCESS_CLIENT_SECRET
 import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
 import nl.giejay.android.tv.immich.shared.prefs.DISABLE_SSL_VERIFICATION
 import nl.giejay.android.tv.immich.shared.prefs.LiveSharedPreferences
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.io.InputStream
 
 
@@ -25,23 +29,32 @@ class CustomGlideModule : AppGlideModule() {
         LiveSharedPreferences(PreferenceManager.sharedPreference)
 
     init {
-        prefs.listenMultiple(listOf(API_KEY.key(), DEBUG_MODE.key(), DISABLE_SSL_VERIFICATION.key()))
-            .observeForever {
-                reloadFactory(
-                    PreferenceManager.get(API_KEY), // listenMultiple's raw value is still encrypted
-                    it[DISABLE_SSL_VERIFICATION.key()] == true
-                )
-            }
+        // the Cloudflare Access token is part of the request headers, so a changed token needs a
+        // new client as well
+        prefs.listenMultiple(
+            listOf(
+                API_KEY.key(),
+                DEBUG_MODE.key(),
+                DISABLE_SSL_VERIFICATION.key(),
+                CF_ACCESS_CLIENT_ID.key(),
+                CF_ACCESS_CLIENT_SECRET.key()
+            )
+        ).observeForever {
+            // listenMultiple's raw values are still encrypted, so read the headers via prefs again
+            reloadFactory(it[DISABLE_SSL_VERIFICATION.key()] == true)
+        }
     }
 
-    private fun reloadFactory(apiKey: String, disableSsl: Boolean) {
+    private fun reloadFactory(disableSsl: Boolean) {
         factory = if (PreferenceManager.isLoggedId()) {
             OkHttpUrlLoader.Factory(
                 ApiClientFactory.getClient(
                     disableSsl,
-                    apiKey,
+                    ApiHeaders.apiKey(PreferenceManager.get(API_KEY)),
                     // never enable debug mode of responses in glide, too much data
-                    false
+                    false,
+                    ApiHeaders.serviceTokenFromPrefs(),
+                    PreferenceManager.hostName.toHttpUrlOrNull()?.host
                 )
             )
         } else {

@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.navigation.fragment.findNavController
 import nl.giejay.android.tv.immich.R
-import nl.giejay.android.tv.immich.shared.prefs.API_KEY
+import nl.giejay.android.tv.immich.api.util.ApiHeaders
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.mediaslider.plugin.TimelineStoryProgressPlugin
 import nl.giejay.mediaslider.view.MediaSliderFragment
@@ -45,7 +45,7 @@ class ImmichMediaSlider : MediaSliderFragment() {
 
         setDefaultExoFactory(
             DefaultHttpDataSource.Factory()
-                .setDefaultRequestProperties(mapOf("x-api-key" to PreferenceManager.get(API_KEY)))
+                .setDefaultRequestProperties(ApiHeaders.fromPrefs())
         )
 
         if (bundle.timelineView) {

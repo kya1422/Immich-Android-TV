@@ -11,8 +11,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.navigation.NavController
+import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
+import androidx.preference.Preference.SummaryProvider
 import com.github.alexzhirkevich.customqrgenerator.QrData
 import com.github.alexzhirkevich.customqrgenerator.vector.QrCodeDrawable
 import nl.giejay.android.tv.immich.ImmichApplication
@@ -61,6 +63,54 @@ data object HOST_NAME : StringPref("",
 
     override fun save(sharedPreferences: SharedPreferences, value: String) {
         super.save(sharedPreferences, value.replace(Regex("/$"), ""))
+    }
+}
+
+// Cloudflare Access service token, used when the Immich server is only reachable through
+// Cloudflare Access (see ApiHeaders). Both values are optional: without them no extra headers
+// are sent, so servers without Access keep working.
+data object CF_ACCESS_CLIENT_ID : StringPref("",
+    ImmichApplication.appContext!!.getString(R.string.cf_access_client_id),
+    ImmichApplication.appContext!!.getString(R.string.cf_access_client_id_desc)) {
+    override fun key() = "cfAccessClientId"
+}
+
+data object CF_ACCESS_CLIENT_SECRET : StringPref("",
+    ImmichApplication.appContext!!.getString(R.string.cf_access_client_secret),
+    ImmichApplication.appContext!!.getString(R.string.cf_access_client_secret_desc)) {
+    override fun key() = "cfAccessClientSecret"
+
+    // Encrypted at rest the same way the API key is; getValue/fromPrefValue decrypt, so callers
+    // (guided step, ApiHeaders) always see the plaintext token.
+    override fun getValue(sharedPreferences: SharedPreferences): String =
+        fromPrefValue(sharedPreferences.getString(key(), defaultValue) ?: defaultValue)
+
+    override fun fromPrefValue(prefValue: String): String = ApiKeyCipher.decryptOrAdoptLegacy(prefValue)
+
+    override fun save(sharedPreferences: SharedPreferences, value: String) {
+        super.save(sharedPreferences, toPrefValue(value))
+    }
+
+    override fun toPrefValue(value: String): String = ApiKeyCipher.encrypt(value)
+
+    // The framework would persist (and display) the raw stored value, which is ciphertext here.
+    // Persisting is therefore disabled and handled by save()/getValue() above; the summary is
+    // masked so the token never shows up on the settings screen.
+    override fun createPreference(context: Context): EditTextPreference {
+        val pref = super.createPreference(context)
+        pref.isPersistent = false
+        pref.setText(PreferenceManager.get(this))
+        pref.setOnPreferenceChangeListener { _, newValue ->
+            PreferenceManager.save(this, newValue as? String ?: "")
+            true
+        }
+        pref.summaryProvider = SummaryProvider<EditTextPreference> { editTextPreference ->
+            val isSet = !editTextPreference.text.isNullOrBlank()
+            ImmichApplication.appContext!!.getString(
+                if (isSet) R.string.cf_access_client_secret_set else R.string.cf_access_client_secret_not_set
+            )
+        }
+        return pref
     }
 }
 
@@ -657,6 +707,15 @@ data object HomeScreenChannelsPrefScreen : PrefScreen(ImmichApplication.appConte
                 ENABLE_HOME_SCREEN_CHANNELS,
                 CHANNEL_ALBUMS,
                 CHANNEL_REFRESH_NOW)
+        )
+    )
+)
+
+data object NetworkPrefScreen : PrefScreen(ImmichApplication.appContext!!.getString(R.string.network_settings), "network",
+    listOf(
+        PrefCategory(
+            ImmichApplication.appContext!!.getString(R.string.cf_access_token_category),
+            listOf(CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET)
         )
     )
 )
