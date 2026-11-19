@@ -26,6 +26,11 @@ on:
         type: boolean
         default: true
 
+# The default GITHUB_TOKEN of a repository can be read-only; publishing a release needs
+# contents: write (Settings -> Actions -> General -> Workflow permissions must allow it).
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
